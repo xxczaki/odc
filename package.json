@@ -1,0 +1,43 @@
+{
+  "name": "odc",
+  "version": "2.0.0",
+  "description": "Update your npm dependencies easily!",
+  "main": "cli.js",
+  "scripts": {
+    "test": "xo"
+  },
+  "bin": {
+    "odc": "cli.js"
+  },
+  "preferGlobal": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xxczaki/odc"
+  },
+  "keywords": [
+    "odc",
+    "update",
+    "dependencies",
+    "npm",
+    "latest",
+    "deps",
+    "fast",
+    "upgrade",
+    "updates"
+  ],
+  "author": "Antoni Kepinski <a@kepinski.me> (https://kepinski.me)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xxczaki/odc/issues"
+  },
+  "homepage": "https://github.com/xxczaki/odc#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "boxen": "^1.3.0",
+    "chalk": "^2.4.1",
+    "ora": "^3.0.0"
+  },
+  "devDependencies": {
+    "xo": "^0.22.0"
+  }
+}
