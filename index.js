@@ -63,29 +63,24 @@ if (options.exclude && options.exclude !== true) {
 		const prevDeps = Object.assign({}, deps);
 		const prevDevDeps = Object.assign({}, devDeps);
 
-		// Version range
-		let range = '';
-
 		let updatedDeps = {};
 		let updatedDevDeps = {};
 
 		const mapper = async name => {
-			range = prevDeps[name].charAt(0);
 			const latest = await latestVersion(name);
 
-			if (prevDeps[name] !== range + latest && !prevDeps[name].match(/(latest|[*])/s)) {
-				updatedDeps = {...updatedDeps, ...{[name]: range + latest}};
-				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green(range + latest)}`);
+			if (prevDeps[name] !== '^' + latest && !prevDeps[name].match(/(latest|[*])/s)) {
+				updatedDeps = {...updatedDeps, ...{[name]: '^' + latest}};
+				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green('^' + latest)}`);
 			}
 		};
 
 		const devMapper = async name => {
-			range = prevDevDeps[name].charAt(0);
 			const latest = await latestVersion(name);
 
-			if (prevDevDeps[name] !== range + latest && !prevDevDeps[name].match(/(latest|[*])/s)) {
-				updatedDevDeps = {...updatedDevDeps, ...{[name]: range + latest}};
-				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green(range + latest)}`);
+			if (prevDevDeps[name] !== '^' + latest && !prevDevDeps[name].match(/(latest|[*])/s)) {
+				updatedDevDeps = {...updatedDevDeps, ...{[name]: '^' + latest}};
+				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green('^' + latest)}`);
 			}
 		};
 
