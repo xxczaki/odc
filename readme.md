@@ -11,7 +11,7 @@
 
 - ⚡ Blazing Fast (usually completes in less than a second)
 - ⚙️ Simple, but configurable
-- ✂️ Lightweight (~130 LOC & 5 dependencies)
+- ✂️ Lightweight (~150 LOC & 6 dependencies)
 
 ## Install
 
