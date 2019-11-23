@@ -1,6 +1,6 @@
 {
     "name": "odc",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Update your npm dependencies easily!",
     "main": "index.js",
     "scripts": {
@@ -13,6 +13,9 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/xxczaki/odc.git"
+    },
+    "engines": {
+        "node": ">=10"
     },
     "keywords": [
         "odc",
