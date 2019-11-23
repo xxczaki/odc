@@ -6,9 +6,10 @@ const fs = require('fs').promises;
 const {performance} = require('perf_hooks');
 const getopts = require('getopts');
 const chalk = require('chalk');
-const readPkgUp = require('read-pkg-up');
-const pMap = require('p-map');
+const findUp = require('find-up');
+const rpj = require('read-package-json-fast');
 const latestVersion = require('latest-version');
+const pMap = require('p-map');
 
 const options = getopts(process.argv.slice(2), {
 	alias: {
@@ -51,15 +52,17 @@ if (options.exclude && options.exclude !== true) {
 	const t0 = performance.now();
 
 	try {
-		const closest = await readPkgUp({cwd: options.input ? options.input : process.cwd()});
+		const closest = await findUp(options.input || 'package.json');
 
 		if (!closest) {
 			console.log(chalk.red(`Unable to find package.json in ${process.cwd()} or any of its parent directories`));
 			process.exit(1);
 		}
 
-		const deps = closest.packageJson.dependencies || {};
-		const devDeps = closest.packageJson.devDependencies || {};
+		const parsed = await rpj(closest);
+
+		const deps = parsed.dependencies || {};
+		const devDeps = parsed.devDependencies || {};
 		const prevDeps = Object.assign({}, deps);
 		const prevDevDeps = Object.assign({}, devDeps);
 
@@ -95,7 +98,7 @@ if (options.exclude && options.exclude !== true) {
 		await pMap(devNames, devMapper);
 
 		// Remove unnecessary properties
-		const {readme, _id, ...rest} = closest.packageJson;
+		const {_id, ...rest} = parsed;
 
 		const packageJson = {
 			...rest,
@@ -116,7 +119,7 @@ if (options.exclude && options.exclude !== true) {
 		if (options.json) {
 			console.log('\n' + JSON.stringify(packageJson, undefined, 4));
 		} else {
-			await fs.writeFile(closest.path, JSON.stringify(packageJson, undefined, 4));
+			await fs.writeFile(closest, JSON.stringify(packageJson, undefined, 4));
 		}
 
 		const t1 = performance.now();
@@ -126,3 +129,4 @@ if (options.exclude && options.exclude !== true) {
 		process.exit(1);
 	}
 })();
+

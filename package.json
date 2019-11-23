@@ -37,10 +37,11 @@
     "homepage": "https://github.com/xxczaki/odc#readme",
     "dependencies": {
         "chalk": "^3.0.0",
+        "find-up": "^4.1.0",
         "getopts": "^2.2.5",
         "latest-version": "^5.1.0",
         "p-map": "^3.0.0",
-        "read-pkg-up": "^7.0.0"
+        "read-package-json-fast": "^1.0.3"
     },
     "devDependencies": {
         "xo": "^0.25.3"
