@@ -63,8 +63,8 @@ if (options.exclude && options.exclude !== true) {
 
 		const deps = parsed.dependencies || {};
 		const devDeps = parsed.devDependencies || {};
-		const prevDeps = Object.assign({}, deps);
-		const prevDevDeps = Object.assign({}, devDeps);
+		const prevDeps = {...deps};
+		const prevDevDeps = {...devDeps};
 
 		let updatedDeps = {};
 		let updatedDevDeps = {};
@@ -92,7 +92,7 @@ if (options.exclude && options.exclude !== true) {
 			const latest = await latestVersion(name);
 			const operator = detectRange(prevDeps[name]);
 
-			if (prevDeps[name] !== operator + latest && !prevDeps[name].match(/(latest|[*])/s)) {
+			if (prevDeps[name] !== operator + latest && !prevDeps[name].match(/(?<range>latest|[*])/s)) {
 				updatedDeps = {...updatedDeps, ...{[name]: operator + latest}};
 				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green(operator + latest)}`);
 			}
@@ -102,7 +102,7 @@ if (options.exclude && options.exclude !== true) {
 			const latest = await latestVersion(name);
 			const operator = detectRange(prevDevDeps[name]);
 
-			if (prevDevDeps[name] !== operator + latest && !prevDevDeps[name].match(/(latest|[*])/s)) {
+			if (prevDevDeps[name] !== operator + latest && !prevDevDeps[name].match(/(?<range>latest|[*])/s)) {
 				updatedDevDeps = {...updatedDevDeps, ...{[name]: operator + latest}};
 				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green(operator + latest)}`);
 			}
@@ -115,8 +115,18 @@ if (options.exclude && options.exclude !== true) {
 			.filter(name => exclude ? !exclude.includes(name) : true)
 			.map(name => name);
 
-		await pMap(names, mapper);
-		await pMap(devNames, devMapper);
+		await Promise.all([names, devNames]).then(async results => {
+			await pMap(results[0], mapper);
+			await pMap(results[1], devMapper);
+		});
+
+		if (Object.keys(updatedDeps).length === 0 && Object.keys(updatedDevDeps).length === 0) {
+			const t1 = performance.now();
+
+			console.log(chalk.green('Everything up-to-date'));
+			console.log(`\n✨  Done in ${((t1 - t0) / 1000).toFixed(2)}s`);
+			process.exit(0);
+		}
 
 		// Remove unnecessary properties
 		const {_id, ...rest} = parsed;
@@ -132,10 +142,6 @@ if (options.exclude && options.exclude !== true) {
 				...updatedDevDeps
 			}
 		};
-
-		if (Object.keys(updatedDeps).length === 0 && Object.keys(updatedDevDeps).length === 0) {
-			console.log(chalk.green('Everything up-to-date'));
-		}
 
 		if (options.json) {
 			console.log('\n' + JSON.stringify(packageJson, undefined, 4));
