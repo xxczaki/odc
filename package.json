@@ -1,6 +1,6 @@
 {
     "name": "odc",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "description": "Update your npm dependencies easily!",
     "main": "index.js",
     "scripts": {
