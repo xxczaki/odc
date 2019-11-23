@@ -69,21 +69,42 @@ if (options.exclude && options.exclude !== true) {
 		let updatedDeps = {};
 		let updatedDevDeps = {};
 
+		const detectRange = version => {
+			const firstChar = version.charAt(0);
+			const secondChar = version.charAt(1);
+
+			if (firstChar.match(/[<>]/i)) {
+				if (secondChar === '=') {
+					return version.slice(0, 2);
+				}
+
+				return firstChar;
+			}
+
+			if (firstChar.match(/[=~^]/i)) {
+				return firstChar;
+			}
+
+			return '';
+		};
+
 		const mapper = async name => {
 			const latest = await latestVersion(name);
+			const operator = detectRange(prevDeps[name]);
 
-			if (prevDeps[name] !== '^' + latest && !prevDeps[name].match(/(latest|[*])/s)) {
-				updatedDeps = {...updatedDeps, ...{[name]: '^' + latest}};
-				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green('^' + latest)}`);
+			if (prevDeps[name] !== operator + latest && !prevDeps[name].match(/(latest|[*])/s)) {
+				updatedDeps = {...updatedDeps, ...{[name]: operator + latest}};
+				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green(operator + latest)}`);
 			}
 		};
 
 		const devMapper = async name => {
 			const latest = await latestVersion(name);
+			const operator = detectRange(prevDevDeps[name]);
 
-			if (prevDevDeps[name] !== '^' + latest && !prevDevDeps[name].match(/(latest|[*])/s)) {
-				updatedDevDeps = {...updatedDevDeps, ...{[name]: '^' + latest}};
-				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green('^' + latest)}`);
+			if (prevDevDeps[name] !== operator + latest && !prevDevDeps[name].match(/(latest|[*])/s)) {
+				updatedDevDeps = {...updatedDevDeps, ...{[name]: operator + latest}};
+				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green(operator + latest)}`);
 			}
 		};
 
