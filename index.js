@@ -89,22 +89,24 @@ if (options.exclude && options.exclude !== true) {
 		};
 
 		const mapper = async name => {
-			const latest = await latestVersion(name);
-			const operator = detectRange(prevDeps[name]);
+			const previous = prevDeps[name];
+			const operator = detectRange(previous);
+			const latest = operator + await latestVersion(name);
 
-			if (prevDeps[name] !== operator + latest && !prevDeps[name].match(/(?<range>latest|[*])/s)) {
-				updatedDeps = {...updatedDeps, ...{[name]: operator + latest}};
-				console.log(`${name} ${chalk.red(prevDeps[name])} → ${chalk.green(operator + latest)}`);
+			if (previous !== latest && !previous.match(/(?<range>latest|[*])/s)) {
+				updatedDeps = {...updatedDeps, ...{[name]: latest}};
+				console.log(`${name} ${chalk.red(previous)} → ${chalk.green(latest)}`);
 			}
 		};
 
 		const devMapper = async name => {
-			const latest = await latestVersion(name);
-			const operator = detectRange(prevDevDeps[name]);
+			const previous = prevDevDeps[name];
+			const operator = detectRange(previous);
+			const latest = operator + await latestVersion(name);
 
-			if (prevDevDeps[name] !== operator + latest && !prevDevDeps[name].match(/(?<range>latest|[*])/s)) {
-				updatedDevDeps = {...updatedDevDeps, ...{[name]: operator + latest}};
-				console.log(`${name} ${chalk.red(prevDevDeps[name])} → ${chalk.green(operator + latest)}`);
+			if (previous !== latest && !previous.match(/(?<range>latest|[*])/s)) {
+				updatedDevDeps = {...updatedDevDeps, ...{[name]: latest}};
+				console.log(`${name} ${chalk.red(previous)} → ${chalk.green(latest)}`);
 			}
 		};
 
