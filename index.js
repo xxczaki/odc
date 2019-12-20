@@ -11,6 +11,8 @@ const rpj = require('read-package-json-fast');
 const latestVersion = require('latest-version');
 const pMap = require('p-map');
 
+const {detectRange} = require('./utils/range-detector.js');
+
 const options = getopts(process.argv.slice(2), {
 	alias: {
 		help: 'h',
@@ -68,25 +70,6 @@ if (options.exclude && options.exclude !== true) {
 
 		let updatedDeps = {};
 		let updatedDevDeps = {};
-
-		const detectRange = version => {
-			const firstChar = version.charAt(0);
-			const secondChar = version.charAt(1);
-
-			if (firstChar.match(/[<>]/i)) {
-				if (secondChar === '=') {
-					return version.slice(0, 2);
-				}
-
-				return firstChar;
-			}
-
-			if (firstChar.match(/[=~^]/i)) {
-				return firstChar;
-			}
-
-			return '';
-		};
 
 		const mapper = async name => {
 			const previous = prevDeps[name];
