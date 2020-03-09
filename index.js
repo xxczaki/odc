@@ -94,11 +94,9 @@ if (options.exclude && options.exclude !== true) {
 		};
 
 		const names = Object.keys(deps)
-			.filter(name => exclude ? !exclude.includes(name) : true)
-			.map(name => name);
+			.filter(name => exclude ? !exclude.includes(name) : true);
 		const devNames = Object.keys(devDeps)
-			.filter(name => exclude ? !exclude.includes(name) : true)
-			.map(name => name);
+			.filter(name => exclude ? !exclude.includes(name) : true);
 
 		await Promise.all([names, devNames]).then(async results => {
 			await pMap(results[0], mapper);
