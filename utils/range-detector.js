@@ -1,10 +1,10 @@
 'use strict';
 
-const detectRange = version => {
+export const detectRange = version => {
 	const firstChar = version.charAt(0);
 	const secondChar = version.charAt(1);
 
-	if (firstChar.match(/[<>]/i)) {
+	if (/[<>]/i.test(firstChar)) {
 		if (secondChar === '=') {
 			return version.slice(0, 2);
 		}
@@ -12,11 +12,9 @@ const detectRange = version => {
 		return firstChar;
 	}
 
-	if (firstChar.match(/[=~^]/i)) {
+	if (/[=~^]/i.test(firstChar)) {
 		return firstChar;
 	}
 
-	return '';
+	return undefined;
 };
-
-module.exports = {detectRange};

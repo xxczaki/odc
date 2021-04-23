@@ -2,16 +2,19 @@
 
 'use strict';
 
-const fs = require('fs').promises;
-const {performance} = require('perf_hooks');
-const getopts = require('getopts');
-const chalk = require('chalk');
-const findUp = require('find-up');
-const rpj = require('read-package-json-fast');
-const latestVersion = require('latest-version');
-const pMap = require('p-map');
+import {promises as fs} from 'fs';
+import {performance} from 'perf_hooks';
+import getopts from 'getopts';
+import kleur from 'kleur';
+import findUp from 'find-up';
+import rpj from 'read-package-json-fast';
+import latestVersion from 'latest-version';
+import pMap from 'p-map';
+import {createStore} from 'storage-async';
+import logUpdate from 'log-update';
 
-const {detectRange} = require('./utils/range-detector.js');
+import {detectRange} from './utils/range-detector.js';
+import {tmpdir} from 'os';
 
 const options = getopts(process.argv.slice(2), {
 	alias: {
@@ -22,15 +25,17 @@ const options = getopts(process.argv.slice(2), {
 		json: 'j'
 	}
 });
+const temporary = new Map();
 
 if (options.help) {
 	console.log(`
-	Usage: 
+	Usage:
 	  $ odc <options>
 	Options:
 	  -i, --input <path>                 Path of a package.json file (defaults to the nearest one)
 	  -e, --exclude <pkg,...>            Exclude packages
 	  -j, --json		    	     Output a JSON object, instead of writing package.json
+      -nc, --no-cache                    Run without using cache
 	  -v, --version                      Print the version
 	  -h, --help                         Print this help
 	Examples:
@@ -53,11 +58,13 @@ if (options.exclude && options.exclude !== true) {
 (async () => {
 	const t0 = performance.now();
 
+	const cache = await createStore({path: `${tmpdir()}/odc.json`, ttl: 900_000});
+
 	try {
 		const closest = await findUp(options.input || 'package.json');
 
 		if (!closest) {
-			console.log(chalk.red(`Unable to find package.json in ${process.cwd()} or any of its parent directories`));
+			console.log(kleur.red(`Unable to find package.json in ${process.cwd()} or any of its parent directories`));
 			process.exit(1);
 		}
 
@@ -65,31 +72,43 @@ if (options.exclude && options.exclude !== true) {
 
 		const deps = parsed.dependencies || {};
 		const devDeps = parsed.devDependencies || {};
-		const prevDeps = {...deps};
-		const prevDevDeps = {...devDeps};
+		const previousDeps = {...deps};
+		const previousDevDeps = {...devDeps};
 
 		let updatedDeps = {};
 		let updatedDevDeps = {};
 
 		const mapper = async name => {
-			const previous = prevDeps[name];
-			const operator = detectRange(previous);
-			const latest = operator + await latestVersion(name);
+			const previous = previousDeps[name];
+			const cached = await cache.get(name);
 
-			if (previous !== latest && !previous.match(/(?<range>latest|[*])/s)) {
+			const latest = cached ? cached : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
+
+			if (previous !== latest && !/(?<range>latest|\*)/s.test(previous)) {
 				updatedDeps = {...updatedDeps, ...{[name]: latest}};
-				console.log(`${name} ${chalk.red(previous)} → ${chalk.green(latest)}`);
+
+				if (!cached) {
+					temporary.set(name, latest);
+				}
+
+				console.log(`${name} ${kleur.red(previous)} → ${kleur.green(latest)}`);
 			}
 		};
 
 		const devMapper = async name => {
-			const previous = prevDevDeps[name];
-			const operator = detectRange(previous);
-			const latest = operator + await latestVersion(name);
+			const previous = previousDevDeps[name];
+			const cached = await cache.get(name);
 
-			if (previous !== latest && !previous.match(/(?<range>latest|[*])/s)) {
+			const latest = cached ? cached : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
+
+			if (previous !== latest && !/(?<range>latest|\*)/s.test(previous)) {
 				updatedDevDeps = {...updatedDevDeps, ...{[name]: latest}};
-				console.log(`${name} ${chalk.red(previous)} → ${chalk.green(latest)}`);
+
+				if (!cached) {
+					temporary.set(name, latest);
+				}
+
+				console.log(`${name} ${kleur.red(previous)} → ${kleur.green(latest)}`);
 			}
 		};
 
@@ -106,7 +125,7 @@ if (options.exclude && options.exclude !== true) {
 		if (Object.keys(updatedDeps).length === 0 && Object.keys(updatedDevDeps).length === 0) {
 			const t1 = performance.now();
 
-			console.log(chalk.green('Everything up-to-date'));
+			console.log(kleur.green('Everything up-to-date'));
 			console.log(`\n✨  Done in ${((t1 - t0) / 1000).toFixed(2)}s`);
 			process.exit(0);
 		}
@@ -134,6 +153,15 @@ if (options.exclude && options.exclude !== true) {
 
 		const t1 = performance.now();
 		console.log(`\n✨  Done in ${((t1 - t0) / 1000).toFixed(2)}s`);
+
+		if (temporary.size > 0) {
+			let n = 1;
+
+			for await (const [key, value] of temporary.entries()) {
+				await cache.set(key, value);
+				logUpdate(kleur.yellow(`Populating cache (${n++}/${temporary.size})`));
+			}
+		}
 	} catch (error) {
 		console.log(error);
 		process.exit(1);

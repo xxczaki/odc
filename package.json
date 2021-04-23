@@ -1,21 +1,21 @@
 {
     "name": "odc",
-    "version": "3.1.6",
+    "version": "4.0.0",
     "description": "Update your npm dependencies easily!",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "test": "xo"
     },
     "bin": {
         "odc": "index.js"
     },
-    "preferGlobal": true,
     "repository": {
         "type": "git",
         "url": "git+https://github.com/xxczaki/odc.git"
     },
     "engines": {
-        "node": ">=11.14"
+        "node": ">=12"
     },
     "keywords": [
         "odc",
@@ -30,8 +30,8 @@
     ],
     "author": {
         "name": "Antoni Kepinski",
-        "email": "a@kepinski.me",
-        "url": "https://kepinski.me"
+        "email": "antoni@kepinski.ch",
+        "url": "https://www.kepinski.ch"
     },
     "license": "MIT",
     "bugs": {
@@ -39,14 +39,16 @@
     },
     "homepage": "https://github.com/xxczaki/odc#readme",
     "dependencies": {
-        "chalk": "^3.0.0",
-        "find-up": "^4.1.0",
-        "getopts": "^2.2.5",
+        "find-up": "^5.0.0",
+        "getopts": "^2.3.0",
+        "kleur": "^4.1.4",
         "latest-version": "^5.1.0",
-        "p-map": "^4.0.0",
-        "read-package-json-fast": "^1.1.3"
+        "log-update": "^4.0.0",
+        "p-map": "^5.0.0",
+        "read-package-json-fast": "^2.0.2",
+        "storage-async": "1.0.0"
     },
     "devDependencies": {
-        "xo": "^0.27.2"
+        "xo": "^0.39.1"
     }
 }
