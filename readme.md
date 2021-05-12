@@ -5,18 +5,24 @@
 [![Build Status](https://travis-ci.org/xxczaki/odc.svg?branch=master)](https://travis-ci.org/xxczaki/odc)
 [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/xojs/xo)
 
-<img src="odc.svg" height="600"/>
+![Screenshot](screenshot.png)
 
 ## Highlights
 
-- ⚡ Blazing Fast (usually completes in less than a second)
-- ⚙️ Simple, but configurable
-- ✂️ Lightweight
+- Blazing Fast (usually completes in less than a second)
+- Built-in caching
+- Extremely simple
+- Lightweight
 
 ## Install
 
 ```
 $ npm install --global odc
+```
+
+Or, alternatively:
+```
+$ npx odc
 ```
 
 ## Usage

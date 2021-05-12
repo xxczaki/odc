@@ -45,10 +45,9 @@
         "latest-version": "^5.1.0",
         "log-update": "^4.0.0",
         "p-map": "^5.0.0",
-        "read-package-json-fast": "^2.0.2",
-        "storage-async": "1.0.0"
+        "storage-async": "1.0.1"
     },
     "devDependencies": {
-        "xo": "^0.39.1"
+        "xo": "^0.40.1"
     }
 }

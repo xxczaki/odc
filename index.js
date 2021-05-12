@@ -3,18 +3,18 @@
 'use strict';
 
 import {promises as fs} from 'fs';
+import {tmpdir} from 'os';
 import {performance} from 'perf_hooks';
 import getopts from 'getopts';
 import kleur from 'kleur';
 import findUp from 'find-up';
-import rpj from 'read-package-json-fast';
 import latestVersion from 'latest-version';
 import pMap from 'p-map';
 import {createStore} from 'storage-async';
 import logUpdate from 'log-update';
+import columnify from 'columnify';
 
 import {detectRange} from './utils/range-detector.js';
-import {tmpdir} from 'os';
 
 const options = getopts(process.argv.slice(2), {
 	alias: {
@@ -25,7 +25,9 @@ const options = getopts(process.argv.slice(2), {
 		json: 'j'
 	}
 });
+
 const temporary = new Map();
+const logger = new Map();
 
 if (options.help) {
 	console.log(`
@@ -68,7 +70,7 @@ if (options.exclude && options.exclude !== true) {
 			process.exit(1);
 		}
 
-		const parsed = await rpj(closest);
+		const parsed = JSON.parse(await fs.readFile(closest));
 
 		const deps = parsed.dependencies || {};
 		const devDeps = parsed.devDependencies || {};
@@ -80,9 +82,9 @@ if (options.exclude && options.exclude !== true) {
 
 		const mapper = async name => {
 			const previous = previousDeps[name];
-			const cached = await cache.get(name);
+			const cached = await cache.has(name);
 
-			const latest = cached ? cached : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
+			const latest = cached ? await cache.get(name) : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
 
 			if (previous !== latest && !/(?<range>latest|\*)/s.test(previous)) {
 				updatedDeps = {...updatedDeps, ...{[name]: latest}};
@@ -91,15 +93,15 @@ if (options.exclude && options.exclude !== true) {
 					temporary.set(name, latest);
 				}
 
-				console.log(`${name} ${kleur.red(previous)} → ${kleur.green(latest)}`);
+				logger.set(name, {previous, latest});
 			}
 		};
 
 		const devMapper = async name => {
 			const previous = previousDevDeps[name];
-			const cached = await cache.get(name);
+			const cached = await cache.has(name);
 
-			const latest = cached ? cached : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
+			const latest = cached ? await cache.get(name) : `${detectRange(previous) ?? ''}${await latestVersion(name)}`;
 
 			if (previous !== latest && !/(?<range>latest|\*)/s.test(previous)) {
 				updatedDevDeps = {...updatedDevDeps, ...{[name]: latest}};
@@ -108,7 +110,7 @@ if (options.exclude && options.exclude !== true) {
 					temporary.set(name, latest);
 				}
 
-				console.log(`${name} ${kleur.red(previous)} → ${kleur.green(latest)}`);
+				logger.set(name, {previous, latest});
 			}
 		};
 
@@ -151,13 +153,25 @@ if (options.exclude && options.exclude !== true) {
 			await fs.writeFile(closest, JSON.stringify(packageJson, undefined, 4));
 		}
 
+		let columns = [];
+
+		for (const [key, value] of logger) {
+			columns = [...columns, {
+				name: key,
+				previous: kleur.red(value.previous),
+				latest: kleur.green(value.latest)
+			}];
+		}
+
+		console.log(columnify(columns));
+
 		const t1 = performance.now();
 		console.log(`\n✨  Done in ${((t1 - t0) / 1000).toFixed(2)}s`);
 
 		if (temporary.size > 0) {
 			let n = 1;
 
-			for await (const [key, value] of temporary.entries()) {
+			for await (const [key, value] of temporary) {
 				await cache.set(key, value);
 				logUpdate(kleur.yellow(`Populating cache (${n++}/${temporary.size})`));
 			}
